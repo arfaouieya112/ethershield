@@ -1,0 +1,98 @@
+'forge clean' running (wd: /home/claude/ethershield-simple)
+'forge config --json' running
+'forge build --build-info --deny never --skip ./test/** ./script/** --force' running (wd: /home/claude/ethershield-simple)
+INFO:Detectors:
+Detector: arbitrary-send-eth
+FixedTreasury.withdraw(uint256) (src/AccessControlDemo.sol#42-44) sends eth to arbitrary user
+	Dangerous calls:
+	- address(msg.sender).transfer(amount) (src/AccessControlDemo.sol#43)
+VulnerablePuzzle.solve(string) (src/FrontRunning.sol#12-17) sends eth to arbitrary user
+	Dangerous calls:
+	- address(msg.sender).transfer(address(this).balance) (src/FrontRunning.sol#16)
+VulnerableSigVault.claim(address,uint256,bytes) (src/SignatureReplay.sol#14-19) sends eth to arbitrary user
+	Dangerous calls:
+	- address(to).transfer(amount) (src/SignatureReplay.sol#18)
+FixedSigVault.claim(address,uint256,uint256,bytes) (src/SignatureReplay.sol#34-41) sends eth to arbitrary user
+	Dangerous calls:
+	- address(to).transfer(amount) (src/SignatureReplay.sol#40)
+VulnerableWallet.transfer(address,uint256) (src/TxOrigin.sol#11-14) sends eth to arbitrary user
+	Dangerous calls:
+	- to.transfer(amount) (src/TxOrigin.sol#13)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+INFO:Detectors:
+Detector: reentrancy-eth
+Reentrancy in VulnerableAuction.bid() (src/DenialOfService.sol#8-16):
+	External calls:
+	- (ok,None) = leader.call{value: highestBid}() (src/DenialOfService.sol#11)
+	State variables written after the call(s):
+	- highestBid = msg.value (src/DenialOfService.sol#15)
+	VulnerableAuction.highestBid (src/DenialOfService.sol#6) can be used in cross function reentrancies:
+	- VulnerableAuction.bid() (src/DenialOfService.sol#8-16)
+	- VulnerableAuction.highestBid (src/DenialOfService.sol#6)
+	- leader = msg.sender (src/DenialOfService.sol#14)
+	VulnerableAuction.leader (src/DenialOfService.sol#5) can be used in cross function reentrancies:
+	- VulnerableAuction.bid() (src/DenialOfService.sol#8-16)
+	- VulnerableAuction.leader (src/DenialOfService.sol#5)
+Reentrancy in VulnerableVault.withdraw() (src/Reentrancy.sol#13-19):
+	External calls:
+	- (ok,None) = msg.sender.call{value: bal}() (src/Reentrancy.sol#16)
+	State variables written after the call(s):
+	- balances[msg.sender] = 0 (src/Reentrancy.sol#18)
+	VulnerableVault.balances (src/Reentrancy.sol#7) can be used in cross function reentrancies:
+	- VulnerableVault.balances (src/Reentrancy.sol#7)
+	- VulnerableVault.deposit() (src/Reentrancy.sol#9-11)
+	- VulnerableVault.withdraw() (src/Reentrancy.sol#13-19)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+INFO:Detectors:
+Detector: erc20-interface
+VulnerableWallet (src/TxOrigin.sol#4-15) has incorrect ERC20 function interface:VulnerableWallet.transfer(address,uint256) (src/TxOrigin.sol#11-14)
+FixedWallet (src/TxOrigin.sol#17-28) has incorrect ERC20 function interface:FixedWallet.transfer(address,uint256) (src/TxOrigin.sol#24-27)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+INFO:Detectors:
+Detector: tx-origin
+VulnerableWallet.transfer(address,uint256) (src/TxOrigin.sol#11-14) uses tx.origin for authorization: require(bool,string)(tx.origin == owner,not owner) (src/TxOrigin.sol#12)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+INFO:Detectors:
+Detector: missing-zero-check
+VulnerableTreasury.setOwner(address).newOwner (src/AccessControlDemo.sol#14) lacks a zero-check on :
+		- owner = newOwner (src/AccessControlDemo.sol#15)
+VulnerableSigVault.constructor(address)._signer (src/SignatureReplay.sol#10) lacks a zero-check on :
+		- signer = _signer (src/SignatureReplay.sol#11)
+VulnerableSigVault.claim(address,uint256,bytes).to (src/SignatureReplay.sol#14) lacks a zero-check on :
+		- address(to).transfer(amount) (src/SignatureReplay.sol#18)
+FixedSigVault.constructor(address)._signer (src/SignatureReplay.sol#26) lacks a zero-check on :
+		- signer = _signer (src/SignatureReplay.sol#27)
+FixedSigVault.claim(address,uint256,uint256,bytes).to (src/SignatureReplay.sol#34) lacks a zero-check on :
+		- address(to).transfer(amount) (src/SignatureReplay.sol#40)
+VulnerableWallet.transfer(address,uint256).to (src/TxOrigin.sol#11) lacks a zero-check on :
+		- to.transfer(amount) (src/TxOrigin.sol#13)
+FixedWallet.transfer(address,uint256).to (src/TxOrigin.sol#24) lacks a zero-check on :
+		- to.transfer(amount) (src/TxOrigin.sol#26)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+INFO:Detectors:
+Detector: timestamp
+FixedSigVault.claim(address,uint256,uint256,bytes) (src/SignatureReplay.sol#34-41) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp <= deadline,signature expired) (src/SignatureReplay.sol#35)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in VulnerableAuction.bid() (src/DenialOfService.sol#8-16):
+	- (ok,None) = leader.call{value: highestBid}() (src/DenialOfService.sol#11)
+Low level call in FixedAuction.withdrawRefund() (src/DenialOfService.sol#33-39):
+	- (ok,None) = msg.sender.call{value: amount}() (src/DenialOfService.sol#37)
+Low level call in VulnerableVault.withdraw() (src/Reentrancy.sol#13-19):
+	- (ok,None) = msg.sender.call{value: bal}() (src/Reentrancy.sol#16)
+Low level call in FixedVault.withdraw() (src/Reentrancy.sol#29-35):
+	- (ok,None) = msg.sender.call{value: bal}() (src/Reentrancy.sol#33)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Detectors:
+Detector: immutable-states
+FixedPuzzle.answerHash (src/FrontRunning.sol#21) should be immutable 
+FixedSigVault.signer (src/SignatureReplay.sol#23) should be immutable 
+FixedWallet.owner (src/TxOrigin.sol#18) should be immutable 
+VulnerablePuzzle.answerHash (src/FrontRunning.sol#5) should be immutable 
+VulnerableSigVault.signer (src/SignatureReplay.sol#8) should be immutable 
+VulnerableWallet.owner (src/TxOrigin.sol#5) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+INFO:Slither:. analyzed (23 contracts with 102 detectors), 28 result(s) found
